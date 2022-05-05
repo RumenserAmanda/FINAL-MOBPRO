@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {StyleSheet, View, Image} from 'react-native';
 
 import {Logo as Bg} from '../assets/images';
@@ -22,7 +22,9 @@ const s = StyleSheet.create({
 });
 
 export default function Splash({navigation}) {
-
+  useEffect(() => {
+    setTimeout(() => navigation.replace('Welcome'), 1000);
+  }, []);
 
   return (
     <View style={s.screen}>
