@@ -18,6 +18,8 @@ import Smile from './Smile.svg';
 import Attachment from './Attachment.svg';
 import Microphone from './Microphone.svg';
 import Chat from './Chat.svg';
+import DeleteChat from './DeleteChat.svg';
+import DeleteContact from './DeleteContact.svg';
 
 export {
   DotsDark,
@@ -38,4 +40,6 @@ export {
   Attachment,
   Microphone,
   Chat,
+  DeleteChat,
+  DeleteContact,
 };
