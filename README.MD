@@ -1,4 +1,4 @@
-## Mobile Application Development
+## Mobile Application Development - 
 -----
 ### Collaborators:
 ##### Amanda Putri Hillary Christy Rumenser
