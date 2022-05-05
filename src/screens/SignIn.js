@@ -100,6 +100,7 @@ export default function SignIn({navigation}) {
     const [name, setName] = useState(null);
 
     const continuePress = () => {
+        console.log(users);
         if(phoneNumber !== null && phoneNumber !== '') {
             users.default.forEach(r => {
                 if(r.phone === phoneNumber) {

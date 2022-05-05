@@ -13,7 +13,7 @@ export default function Router() {
       <Stack.Screen name="Welcome" component={Welcome} />
       <Stack.Screen name="SignIn" component={SignIn} />
       <Stack.Screen name="Chats" component={Chats} />
-      <Stack.Screen name="Chats" component={MyProfile} />
+      <Stack.Screen name="MyProfile" component={MyProfile} />
       <Stack.Screen name="ChatItem" component={ChatItem} />
     </Stack.Navigator>
   );
