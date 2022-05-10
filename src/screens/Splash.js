@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import {StyleSheet, View, Image} from 'react-native';
+import { StyleSheet, View, Image } from 'react-native';
 
-import {Logo as Bg} from '../assets/images';
+import { Logo } from '../assets/images';
 
 const uri = 'http://192.168.1.12:3000';
 
@@ -12,7 +12,7 @@ const s = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  bg: {
+  logo: {
     width: 150,
     height: 150,
   },
@@ -25,7 +25,7 @@ export default function Splash({navigation}) {
 
   return (
     <View style={s.screen}>
-      <Image source={Bg} style={s.bg} />
+      <Image source={Logo} style={s.logo} />
     </View>
   );
 }

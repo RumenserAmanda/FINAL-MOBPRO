@@ -48,14 +48,14 @@ const s = StyleSheet.create({
     },
 });
 
-export default function Welcome({navigation}) {
+export default function Welcome({navigation, route}) {
     return(
         <View style={s.screen}>
             <Text style={s.title}>Welcome to Chats</Text>
             <Image source={WelcomeImage} style={s.image} />
             <View style={s.bottom}>
                 <Text style={s.text('#FFFFFF')}>Baca {<Text style={s.text('#87A4EE')}>Kebijakan Privasi</Text>} kami. Ketuk "SETUJU DAN LANJUTKAN" untuk menerima {<Text style={s.text('#87A4EE')}>Ketentuan Layanan.</Text>}</Text>
-                <TouchableOpacity style={s.button} activeOpacity={0.5} onPress={() => navigation.replace('SignIn')}>
+                <TouchableOpacity style={s.button} activeOpacity={0.5} onPress={() => navigation.reset({routes: [{name: 'SignIn', params: route.params}]})}>
                     <Text style={s.buttonText}>SETUJU DAN LANJUTKAN</Text>
                 </TouchableOpacity>
             </View>
