@@ -129,15 +129,20 @@ export default function Chats({navigation, route}) {
             if(resUser.status === 'success') {
                 let userDataTemp = resUser.desc[0];
 
-                userDataTemp.contacts.forEach(async(r, index) => {
-                    const reqTemp = await fetch(`${uri}/api/user?_id=${r._id}`);
-                    const resTemp = await reqTemp.json();
-                    if(resTemp.status === 'success') {
-                        userDataTemp.contacts[index].contactPicture = resTemp.desc[0].picture;
-                    }
-
-                    (index === userDataTemp.contacts.length-1) && setUserData(userDataTemp);
-                });
+                if(userDataTemp.contacts.length > 0) {
+                    userDataTemp.contacts.forEach(async(r, index) => {
+                        const reqTemp = await fetch(`${uri}/api/user?_id=${r._id}`);
+                        const resTemp = await reqTemp.json();
+                        if(resTemp.status === 'success') {
+                            userDataTemp.contacts[index].contactPicture = resTemp.desc[0].picture;
+                        }
+    
+                        (index === userDataTemp.contacts.length-1) && setUserData(userDataTemp);
+                    });
+                }
+                else {
+                    setUserData(userDataTemp);
+                }
             }
         }
     })();
@@ -186,7 +191,7 @@ export default function Chats({navigation, route}) {
                                     </TouchableOpacity>
                                     <View style={s.itemWrap}>
                                         <View style={s.itemTop}>
-                                            <Text style={s.itemName}>{r.name}</Text>
+                                            <Text style={s.itemName}>{r.contactName}</Text>
                                             <Text style={s.itemDate}>{r.lastSeen}</Text>
                                         </View>
                                         <View style={s.itemBottom}>

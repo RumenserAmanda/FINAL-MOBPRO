@@ -6,6 +6,7 @@ import {
   TextInput,
   TouchableOpacity,
 } from 'react-native';
+import { showMessage } from 'react-native-flash-message';
 
 import { Header, Gap } from '../components';
 
@@ -73,7 +74,7 @@ const s = StyleSheet.create({
   },
 });
 
-export default function Chats({navigation}) {
+export default function Chats({navigation, route}) {
   const uri = route.params.uri;
   const [userData, setUserData] = useState(route.params.data);
   const [name, setName] = useState(null);
@@ -117,8 +118,8 @@ export default function Chats({navigation}) {
     else {
       showMessage(s.showMessage({
         type: 'error',
-        title: "Oops! Terjadi kesalahan",
-        desc: "Tidak dapat menambahkan kontak baru. Coba lagi nanti.",
+        title: "Terjadi kesalahan",
+        desc: "Nama dan Nomor Telepon tidak boleh kosong.",
       }));
     }
   }

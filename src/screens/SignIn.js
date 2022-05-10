@@ -133,13 +133,13 @@ export default function SignIn({navigation, route}) {
 
             users.forEach(r => {
                 if(phoneNumber === r.phone) {
-                    navigation.push('Chats', {uri: uri, data: r._id.toString()}); // use this in dev mode
-                    // navigation.reset({routes: [{name: 'Chats', params: {uri: uri, data: r._id.toString()}}]});
+                    // navigation.push('Chats', {uri: uri, data: r._id.toString()}); // use this in dev mode
+                    navigation.reset({routes: [{name: 'Chats', params: {uri: uri, data: r._id.toString()}}]});
                     exist = true;
                 }
             });
 
-            (exist === false) && showMessage(s.showMessage({
+            (exist === false && phoneNumber !== null && phoneNumber !== '' && (name === null || name === '')) && showMessage(s.showMessage({
                 type: 'warning',
                 title: "Nomor telepon tidak terdaftar",
                 desc: "Tolong masukkan nomor telepon yang sudah terdaftar atau buat akun baru dengan memasukkan nama anda.",
@@ -161,8 +161,8 @@ export default function SignIn({navigation, route}) {
 
                 const req = await fetch(`${uri}/api/user`, reqOpt);
                 const res = await req.json();
-                (res.status === 'success') && navigation.push('Chats', {uri: uri, data: res.desc._id}); // use this in dev mode
-                // (res.status === 'success') && navigation.reset({routes: [{name: 'Chats', params: {uri: uri, data: res.desc._id}}]});
+                // (res.status === 'success') && navigation.push('Chats', {uri: uri, data: res.desc._id}); // use this in dev mode
+                (res.status === 'success') && navigation.reset({routes: [{name: 'Chats', params: {uri: uri, data: res.desc._id.toString()}}]});
                 (res.status === 'error') && showMessage(s.showMessage({
                     type: 'error',
                     title: "Oops! Terjadi kesalahan",

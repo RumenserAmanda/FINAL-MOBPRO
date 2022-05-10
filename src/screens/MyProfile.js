@@ -23,11 +23,11 @@ const s = StyleSheet.create({
     screen: {
         flex: 1,
         backgroundColor: '#1C2342',
-        color: '#21325E',
+        // color: '#21325E',
     },
     content: {
         marginTop: 25,
-        color: '#21325E',
+        // color: '#21325E',
     },
     picture: {
         height: 150,
@@ -53,20 +53,20 @@ const s = StyleSheet.create({
         paddingVertical: 15,
         paddingHorizontal: 25,
         flexDirection: 'row',
-        color: '#21325E',
+        // color: '#21325E',
     },
     icon: {
         marginRight: 25,
     },
     itemWrap: {
         flex: 1,
-        color: '#21325E',
+        // color: '#21325E',
     },
     itemTop: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        color: '#21325E',
+        // color: '#21325E',
     },
     itemTitle: {
         fontFamily: 'Helvetica',
@@ -103,7 +103,7 @@ const s = StyleSheet.create({
         color: '#E9EDEF',
         fontSize: 15,
         borderBottomWidth: (type === 'input') ? 2.5 : null,
-        borderBottomColor: (type === 'input') ? '#21325E' : null,
+        borderBottomColor: (type === 'input') ? '#87A4EE' : null,
     }),
     overlayPressWrap: {
         flexDirection: 'row',
@@ -111,7 +111,7 @@ const s = StyleSheet.create({
     },
     overlayPressText: {
         fontFamily: 'Helvetica',
-        color: '#21325E',
+        color: '#8696A0',
         fontSize: 15,
     },
 });

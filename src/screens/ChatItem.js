@@ -21,6 +21,7 @@ const s = StyleSheet.create({
     flex: 1,
   },
   chats: {
+    marginVertical: 2.5,
     flex: 1,
   },
   message: type => ({
@@ -45,11 +46,10 @@ const s = StyleSheet.create({
   messageTime: {
     fontFamily: 'Helvetica',
     textAlign: 'right',
-    color: '#8696A0',
+    color: '#505050',
     fontSize: 12.5,
   },
   bottom: {
-    paddingTop: 10,
     paddingBottom: 2.5,
     paddingHorizontal: 5,
     flexDirection: 'row',
@@ -107,7 +107,7 @@ export default function ChatItem({navigation, route}) {
       const req = await fetch(`${uri}/api/message`, reqOpt);
       const res = await req.json();
       if(res.status === 'success') {
-          setMessage(null);
+        setMessage(null);
           
         const reqUserDataNew = await fetch(`${uri}/api/user?_id=${userData._id}`);
         const resUserDataNew = await reqUserDataNew.json();
@@ -150,7 +150,7 @@ export default function ChatItem({navigation, route}) {
         source={ChatBackground}
         style={s.content}
         resizeMode="cover">
-        <ScrollView style={s.chats}>
+        <ScrollView style={s.chats} ref={scrollViewRef} onContentSizeChange={() => scrollViewRef.current.scrollToEnd({animated: false})}>
           {(userData.contact.chats !== null) && userData.contact.chats.map(r => {
               return(<TouchableOpacity key={r._id} style={s.message(r.type)} activeOpacity={0.5}>
                   <Text style={s.messageText}>{r.msg}</Text>
