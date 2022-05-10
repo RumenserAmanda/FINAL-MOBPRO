@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -7,12 +7,23 @@ import {
   TouchableOpacity,
 } from 'react-native';
 
-import {Header, Gap} from '../components';
+import { Header, Gap } from '../components';
 
 const s = StyleSheet.create({
+  showMessage: ({type='default', title='<Title>', desc=null}) => ({
+      fontFamily: 'Helvetica',
+      color: '#202020',
+      titleStyle: {
+          fontWeight: 'bold',
+      },
+
+      backgroundColor: (type === 'success') ? '#40F040' : (type === 'error') ? '#F04040' : (type === 'warning') ? '#F0F040' : '#808080',
+      message: title,
+      description: desc,
+  }),
+
   screen: {
     flex: 1,
-    // backgroundColor: '#FFFFFF',
   },
   content: {
     paddingVertical: 25,
@@ -63,6 +74,55 @@ const s = StyleSheet.create({
 });
 
 export default function Chats({navigation}) {
+  const uri = route.params.uri;
+  const [userData, setUserData] = useState(route.params.data);
+  const [name, setName] = useState(null);
+  const [phoneNumber, setPhoneNumber] = useState(null);
+
+  const addContactPress = async() => {
+    if(name !== null && name !== '' && phoneNumber !== null && phoneNumber !== '' && userData.phone !== phoneNumber) {
+      const reqOpt = {
+        method: 'POST',
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          name: name,
+          phone: phoneNumber,
+          contacts: userData.contacts,
+        }),
+      };
+
+      if(name !== null && name !== '' && name.trim().length !== 0 && phoneNumber !== null && phoneNumber !== '' && phoneNumber.trim().length !== 0) {
+        const req = await fetch(`${uri}/api/user/addaccount?_id=${userData._id}`, reqOpt);
+        const res = await req.json();
+        if(res.status === 'success') {
+          const reqUserDataNew = await fetch(`${uri}/api/user?_id=${userData._id}`);
+          const resUserDataNew = await reqUserDataNew.json();
+          if(resUserDataNew.status === 'success') {
+            setUserData(resUserDataNew.desc[0]);
+            setName(null);
+            setPhoneNumber(null);
+          }
+        }
+
+        (res.status === 'success') ? showMessage(s.showMessage({
+          type: 'success',
+          title: res.message,
+        })) : showMessage(s.showMessage({
+          type: 'error',
+          title: res.message,
+          desc: res.desc,
+        }));
+      }
+    }
+    else {
+      showMessage(s.showMessage({
+        type: 'error',
+        title: "Oops! Terjadi kesalahan",
+        desc: "Tidak dapat menambahkan kontak baru. Coba lagi nanti.",
+      }));
+    }
+  }
+  
   return (
     <View style={s.screen}>
       <Header
@@ -77,6 +137,7 @@ export default function Chats({navigation}) {
             style={s.input}
             placeholder="Enter name here"
             placeholderTextColor="#96A0A9"
+            val={name} onChangeText={(val) => setName(val)}
           />
         </View>
         <View style={s.wrap}>
@@ -86,13 +147,14 @@ export default function Chats({navigation}) {
             keyboardType="numeric"
             placeholder="Enter phone number here"
             placeholderTextColor="#96A0A9"
+            val={phoneNumber} onChangeText={(val) => setPhoneNumber(val.replace(/\s/g, ''))}
           />
         </View>
         <Gap h={50} />
         <TouchableOpacity
           style={s.button}
           activeOpacity={0.5}
-          onPress={() => {}}>
+          onPress={() => addContactPress()}>
           <Text style={s.buttonText}>ADD CONTACT</Text>
         </TouchableOpacity>
       </View>
