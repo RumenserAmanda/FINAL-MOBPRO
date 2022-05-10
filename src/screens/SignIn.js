@@ -1,12 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, TextInput } from 'react-native';
+import { showMessage } from 'react-native-flash-message';
 
 import { DotsDark as Dots } from '../assets/icons';
 import { Gap } from '../components';
 
-const dummyData = require('../data');
-
 const s = StyleSheet.create({
+    showMessage: ({type='default', title='<Title>', desc=null}) => ({
+        fontFamily: 'Helvetica',
+        color: '#202020',
+        titleStyle: {
+            fontWeight: 'bold',
+        },
+
+        backgroundColor: (type === 'success') ? '#40F040' : (type === 'error') ? '#F04040' : (type === 'warning') ? '#F0F040' : '#808080',
+        message: title,
+        description: desc,
+    }),
+
     screen: {
         flex: 1,
         justifyContent: 'space-between',
@@ -88,8 +99,25 @@ const s = StyleSheet.create({
     },
 });
 
-export default function SignIn({navigation}) {
-    const [users, setUsers] = useState(dummyData);
+export default function SignIn({navigation, route}) {
+    const uri = route.params;
+    const [users, setUsers] = useState(null);
+    useEffect(() => {
+        (async() => {
+            try {
+                const req = await fetch(`${uri}/api/users?phone`);
+                const res = await req.json();
+                (res.status === 'success') && setUsers(res.desc);
+            }
+            catch(e) {
+                showMessage(s.showMessage({
+                    type: 'error',
+                    title: "Tidak bisa terhubung ke server",
+                    desc: "Server mungkin sedang dalam perbaikan. Coba lagi nanti.",
+                }));
+            }
+        })();
+    }, []);
 
     const countries = [
         {name: "Indonesia", code: '62'},
@@ -99,14 +127,55 @@ export default function SignIn({navigation}) {
     const [phoneNumber, setPhoneNumber] = useState(null);
     const [name, setName] = useState(null);
 
-    const continuePress = () => {
-        console.log(users);
-        if(phoneNumber !== null && phoneNumber !== '') {
-            users.default.forEach(r => {
-                if(r.phone === phoneNumber) {
-                    navigation.replace('Chats', r);
+    const continuePress = async() => {
+        try {
+            let exist = false;
+
+            users.forEach(r => {
+                if(phoneNumber === r.phone) {
+                    navigation.push('Chats', {uri: uri, data: r._id.toString()}); // use this in dev mode
+                    // navigation.reset({routes: [{name: 'Chats', params: {uri: uri, data: r._id.toString()}}]});
+                    exist = true;
                 }
             });
+
+            (exist === false) && showMessage(s.showMessage({
+                type: 'warning',
+                title: "Nomor telepon tidak terdaftar",
+                desc: "Tolong masukkan nomor telepon yang sudah terdaftar atau buat akun baru dengan memasukkan nama anda.",
+            }));
+
+            if(exist === false && phoneNumber !== null && phoneNumber !== '' && phoneNumber.trim().length !== 0 && name !== null && name !== '' && name.trim().length !== 0) {
+                const reqOpt = {
+                    method: 'POST',
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        phone: phoneNumber,
+                        country: {
+                            name: country.name,
+                            code: country.code,
+                        },
+                        name: name,
+                    }),
+                };
+
+                const req = await fetch(`${uri}/api/user`, reqOpt);
+                const res = await req.json();
+                (res.status === 'success') && navigation.push('Chats', {uri: uri, data: res.desc._id}); // use this in dev mode
+                // (res.status === 'success') && navigation.reset({routes: [{name: 'Chats', params: {uri: uri, data: res.desc._id}}]});
+                (res.status === 'error') && showMessage(s.showMessage({
+                    type: 'error',
+                    title: "Oops! Terjadi kesalahan",
+                    desc: "Tidak dapat membuat akun baru. Coba lagi nanti.",
+                }));
+            }
+        }
+        catch(e) {
+            showMessage(s.showMessage({
+                type: 'error',
+                title: "Tidak bisa terhubung ke server",
+                desc: "Server mungkin sedang dalam perbaikan. Coba lagi nanti.",
+            }));
         }
     }
 
@@ -132,7 +201,7 @@ export default function SignIn({navigation}) {
                             <Text style={[s.text('#8A979D'), {marginRight: 15}]}>+</Text>
                             <Text style={[s.text('#DEE5EB')]}>{country.code}</Text>
                         </View>
-                        <TextInput style={s.bottomRight} placeholder="nomor telepon" placeholderTextColor='#96A0A9' keyboardType='numeric' value={phoneNumber} onChangeText={(val) => setPhoneNumber(val)} />
+                        <TextInput style={s.bottomRight} placeholder="nomor telepon" placeholderTextColor='#96A0A9' keyboardType='numeric' value={phoneNumber} onChangeText={(val) => setPhoneNumber(val.replace(/\s/g, ''))} />
                     </View>
                 </View>
                 <Gap h={15} />
