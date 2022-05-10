@@ -1,13 +1,25 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, TouchableOpacity, ImageBackground, TouchableHighlight, Text, TextInput } from 'react-native';
+import { showMessage } from 'react-native-flash-message';
+import { launchImageLibrary } from 'react-native-image-picker';
 
 import { CameraLight as Camera, Person, Pen, Info, PhoneDark as Phone } from '../assets/icons';
 import { ProfilePerson as DefaultPicture } from '../assets/images';
 import { Header, Gap } from '../components';
 
-const uri = 'http://192.168.1.7:3000/api';
-
 const s = StyleSheet.create({
+    showMessage: ({type='default', title='<Title>', desc=null}) => ({
+        fontFamily: 'Helvetica',
+        color: '#202020',
+        titleStyle: {
+            fontWeight: 'bold',
+        },
+
+        backgroundColor: (type === 'success') ? '#40F040' : (type === 'error') ? '#F04040' : (type === 'warning') ? '#F0F040' : '#808080',
+        message: title,
+        description: desc,
+    }),
+
     screen: {
         flex: 1,
         backgroundColor: '#1C2342',
@@ -104,11 +116,48 @@ const s = StyleSheet.create({
     },
 });
 
-export default function MyProfile({route, navigation}) {
-    const [userData, setUserData] = useState(route.params);
+export default function MyProfile({navigation, route}) {
+    const uri = route.params.uri;
+    const [userData, setUserData] = useState(route.params.data);
+    const [userPictureTemp, setUserPictureTemp] = useState(userData.picture);
     const [userNameTemp, setUserNameTemp] = useState(userData.name);
     const [userAboutTemp, setUserAboutTemp] = useState(userData.about);
     const [overlay, setOverlay] = useState([false, null]);
+
+    const imagePress = async() => {
+        try {
+            const result = await launchImageLibrary({
+                maxHeight: 150,
+                maxWidth: 150,
+                includeBase64: true,
+            });
+            
+            if(!result.didCancel) {
+                const reqOpt = {
+                    method: 'PUT',
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        uri: result.assets[0].uri,
+                    }),
+                };
+    
+                const req = await fetch(`${uri}/api/user/picture?_id=${userData._id}`, reqOpt);
+                const res = await req.json();
+                (res.status === 'success') && setUserPictureTemp(result.assets[0].uri);
+
+                showMessage(s.showMessage({
+                    type: res.status,
+                    title: res.message,
+                }));
+            }
+        }
+        catch(e) {
+            showMessage(s.showMessage({
+                type: 'Error',
+                title: "Unable to open image.",
+            }));
+        }
+    };
 
     const ItemWrap = (title, text, subText, pen) => {
         return(
@@ -126,27 +175,45 @@ export default function MyProfile({route, navigation}) {
     }
 
     const overlaySavePress = async() => {
-        const reqOpt = {
-            method: 'PUT',
-            headers: {"Content-Type": "application/json"},
-            body: (overlay[1] === 'name') ? JSON.stringify({name: userNameTemp}) : JSON.stringify({about: userAboutTemp}),
-        };
-
-        // console.log(`${uri}/users/${(overlay[1] === 'name') ? 'name' : 'about'}:${userData._id}`);
-        const req = await fetch(`${uri}/user/${(overlay[1] === 'name') ? 'name' : 'about'}:${userData._id}`, reqOpt);
-        const res = await req.json();
-        console.log(res.message);
-        console.log(res.desc);
-
-        
+        try {
+            const reqOpt = {
+                method: 'PUT',
+                headers: {"Content-Type": "application/json"},
+                body: (overlay[1] === 'name') ? JSON.stringify({name: userNameTemp}) : JSON.stringify({about: userAboutTemp}),
+            };
+    
+            if(userNameTemp !== null && userNameTemp !== '' && userNameTemp.trim().length !== 0 && userAboutTemp !== null && userAboutTemp !== '' && userAboutTemp.trim().length !== 0) {
+                const req = await fetch(`${uri}/api/user/${(overlay[1] === 'name') ? 'name' : 'about'}?_id=${userData._id}`, reqOpt);
+                const res = await req.json();
+                if(res.status === 'success') {
+                    const reqNewData = await fetch(`${uri}/api/user?_id=${userData._id}`);
+                    const resNewData = await reqNewData.json();
+                    if(resNewData.status === 'success') {
+                        setUserData(resNewData.desc[0]);
+                        setUserNameTemp(userData.name);
+                        setUserAboutTemp(userData.about);
+                    }
+                }
+                showMessage(s.showMessage({
+                    type: res.status,
+                    title: res.message,
+                }));
+            }
+        }
+        catch(e) {
+            showMessage(s.showMessage({
+                type: 'error',
+                title: "Unable to save changes",
+            }));
+        }
     }
 
     return(
         <View style={s.screen}>
             <Header back={'dark'} title="My Profile" onPressLeft={() => navigation.goBack()} />
             <View style={s.content}>
-                <TouchableOpacity activeOpacity={0.5} onPress={() => console.log(userData._id)}>
-                    <ImageBackground source={(userData.picture !== null) ? userData.picture : DefaultPicture} style={s.picture} imageStyle={{borderRadius: 150/2}}>
+                <TouchableOpacity activeOpacity={0.5} onPress={() => imagePress()}>
+                <ImageBackground source={(userPictureTemp === null) ? DefaultPicture : {uri: userPictureTemp}} style={s.picture} imageStyle={{borderRadius: 150/2}}>
                         <View style={s.camera}>
                             <Camera />
                         </View>
