@@ -1,12 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, TouchableHighlight, ScrollView, Image, Dimensions } from 'react-native';
 const { height, width } = Dimensions.get('screen');
+import { useIsFocused } from '@react-navigation/native';
 
 import { SearchDark as Search, DotsDark as Dots, CameraDark as Camera, AddContact } from '../assets/icons';
 import { ProfilePerson as DefaultPicture } from '../assets/images';
 import { Gap } from '../components';
-
-// import Data from '../data';
 
 const s = StyleSheet.create({
     screen: {
@@ -23,7 +22,7 @@ const s = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
     },
-    whatsApp: {
+    chats: {
         fontFamily: 'Helvetica',
         color: '#F0F0F0',
         fontSize: 20,
@@ -118,11 +117,57 @@ const s = StyleSheet.create({
     },
 });
 
-export default function Chats({route, navigation}) {
-    const userData = route.params;
+export default function Chats({navigation, route}) {
+    const uri = route.params.uri;
+    const [userData, setUserData] = useState(null);
+
+    (async() => {
+        if(useIsFocused() && userData === null) {
+            const reqUser = await fetch(`${uri}/api/user?_id=${route.params.data}`);
+            const resUser = await reqUser.json();
+
+            if(resUser.status === 'success') {
+                let userDataTemp = resUser.desc[0];
+
+                userDataTemp.contacts.forEach(async(r, index) => {
+                    const reqTemp = await fetch(`${uri}/api/user?_id=${r._id}`);
+                    const resTemp = await reqTemp.json();
+                    if(resTemp.status === 'success') {
+                        userDataTemp.contacts[index].contactPicture = resTemp.desc[0].picture;
+                    }
+
+                    (index === userDataTemp.contacts.length-1) && setUserData(userDataTemp);
+                });
+            }
+        }
+    })();
+
+    const chatItemPress = async(contactData) => {
+        const req = await fetch(`${uri}/api/user?_id=${contactData._id}`);
+        const res = await req.json();
+        if(res.status === 'success') {
+            navigation.push('ChatItem', {
+                uri: uri,
+                userData: {
+                    _id: userData._id,
+                    contact: contactData,
+                },
+                contactData: {
+                    _id: res.desc[0]._id,
+                    about: res.desc[0].about,
+                    country: res.desc[0].country,
+                    lastSeen: res.desc[0].lastSeen,
+                    name: res.desc[0].name,
+                    phone: res.desc[0].phone,
+                    picture: res.desc[0].picture,
+                },
+            });
+            setUserData(null);
+        }
+    };
 
     const Item = () => {
-        if(userData.contacts === undefined || userData.contacts === null || userData.contacts.length === 0) {
+        if(userData !== null && userData.contacts.length === 0) {
             return(
                 <View style={s.contentEmpty}>
                     <Text style={s.contentEmptyText}>You don't have any contacts</Text>
@@ -132,19 +177,17 @@ export default function Chats({route, navigation}) {
         else {
             return(
                 <ScrollView style={s.content}>
-                    {userData.contacts.map(r => {
+                    {(userData !== null) && userData.contacts.map(r => {
                         return(
-                            <TouchableHighlight key={r._id} underlayColor='#87A4EE' onPress={() => navigation.push('ChatItem', r)}>
+                            <TouchableHighlight key={r._id} underlayColor='#87A4EE' onPress={() => chatItemPress(r)}>
                                 <View style={s.item}>
                                     <TouchableOpacity style={s.profile} activeOpacity={0.5}>
-                                        {/* <Image source={(r.picture === null) ? DefaultPicture : r.picture} style={s.profile} /> */}
-                                        <Image source={(r.picture === undefined) ? DefaultPicture : r.picture} style={s.profile} />
+                                        <Image source={(r.contactPicture === null || r.contactPicture === undefined) ? DefaultPicture : {uri: r.contactPicture}} style={s.profile} />
                                     </TouchableOpacity>
                                     <View style={s.itemWrap}>
                                         <View style={s.itemTop}>
                                             <Text style={s.itemName}>{r.name}</Text>
-                                            {/* <Text style={s.itemDate}>{r.lastSeen}</Text> */}
-                                            <Text style={s.itemDate}>r.lastSeen</Text>
+                                            <Text style={s.itemDate}>{r.lastSeen}</Text>
                                         </View>
                                         <View style={s.itemBottom}>
                                             <Text style={s.itemMessage}>{(r.chats !== null) && r.chats[r.chats.length-1].msg}</Text>
@@ -163,12 +206,12 @@ export default function Chats({route, navigation}) {
         <View style={s.screen}>
             <View style={s.header}>
                 <View style={s.headerTop}>
-                    <Text style={s.whatsApp}>Chats</Text>
+                    <Text style={s.chats}>Chats</Text>
                     <View style={s.iconWrap}>
                         <TouchableOpacity activeOpacity={0.5}>
                             <Search style={{marginRight: 25}}/>
                         </TouchableOpacity>
-                        <TouchableOpacity activeOpacity={0.5} onPress={() => navigation.push('MyProfile', userData)}>
+                        <TouchableOpacity activeOpacity={0.5} onPress={() => {navigation.push('MyProfile', {uri: uri, data: userData}); setUserData(null)}}>
                             <Dots />
                         </TouchableOpacity>
                     </View>
@@ -192,7 +235,7 @@ export default function Chats({route, navigation}) {
                 </View>
             </View>
             {Item()}
-            <TouchableOpacity style={s.chatsFAB} activeOpacity={0.5} onPress={() => navigation.push("AddContact", userData)}>
+            <TouchableOpacity style={s.chatsFAB} activeOpacity={0.5} onPress={() => {navigation.push("AddContact", {uri: uri, data: userData}); setUserData(null)}}>
                 <AddContact />
             </TouchableOpacity>
         </View>
