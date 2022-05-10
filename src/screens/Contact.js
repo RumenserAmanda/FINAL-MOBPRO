@@ -1,11 +1,24 @@
 import React, { useState } from 'react';
 import { StyleSheet, ScrollView, View, TouchableOpacity, Image, Text, TouchableHighlight } from 'react-native';
+import { showMessage } from 'react-native-flash-message';
 
-import { ProfilePerson as Profile } from '../assets/images';
+import { ProfilePerson as DefaultProfile } from '../assets/images';
 import { BackLight as Back, DotsLight as Dots, PhoneLight as Phone, VideoLight as Video, SearchDark as Search, DeleteContact, DeleteChat } from '../assets/icons';
 import { Gap } from '../components';
 
 const s = StyleSheet.create({
+    showMessage: ({type='default', title='<Title>', desc=null}) => ({
+        fontFamily: 'Helvetica',
+        color: '#202020',
+        titleStyle: {
+            fontWeight: 'bold',
+        },
+
+        backgroundColor: (type === 'success') ? '#40F040' : (type === 'error') ? '#F04040' : (type === 'warning') ? '#F0F040' : '#808080',
+        message: title,
+        description: desc,
+    }),
+
     screen: {
         flex: 1,
         backgroundColor: '#1C2342',
@@ -75,8 +88,48 @@ const s = StyleSheet.create({
     },
 });
 
-export default function Contact({route, navigation}) {
-    const [contactData, setContactData] = useState(route.params);
+export default function Contact({navigation, route}) {
+    const uri = route.params.uri;
+    const [userData, setUserData] = useState(route.params.userData);
+    const [contactData, setContactData] = useState(route.params.contactData);
+
+    const deleteContactPress = async() => {
+        const reqOpt = {
+            method: 'DELETE',
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                user: userData._id,
+                contact: contactData._id,
+            }),
+        };
+
+        const req = await fetch(`${uri}/api/user/deleteContact`, reqOpt);
+        const res = await req.json();
+        showMessage(s.showMessage({
+            type: res.status,
+            title: res.message,
+        }));
+        (res.status === 'success') && navigation.reset({routes: [{name: 'Chats', params: {uri: uri, data: userData._id.toString()}}]});
+    };
+    
+    const clearChatPress = async() => {
+        const reqOpt = {
+            method: 'DELETE',
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                user: userData._id,
+                contact: contactData._id,
+            }),
+        };
+
+        const req = await fetch(`${uri}/api/user/clearChat`, reqOpt);
+        const res = await req.json();
+        showMessage(s.showMessage({
+            type: res.status,
+            title: res.message,
+        }));
+        (res.status === 'success') && navigation.reset({routes: [{name: 'Chats', params: {uri: uri, data: userData._id.toString()}}]});
+    };
 
     return(
         <ScrollView style={s.screen}>
@@ -86,12 +139,11 @@ export default function Contact({route, navigation}) {
                         <Back />
                     </TouchableOpacity>
                     <View>
-                        <TouchableOpacity activeOpacity={0.5}>
-                            {/* <Image source={(contactData.picture !== null) ? data.picture : Profile } style={s.picture} /> */}
-                            <Image source={(contactData.picture !== undefined) ? contactData.picture : Profile } style={s.picture} />
+                        <TouchableOpacity activeOpacity={0.5} onPress={() => navigation.push('ProfilePicture', {name: userData.contact.contactName, picture: (contactData.picture === null) ? DefaultProfile : {uri: contactData.picture}})}>
+                            <Image source={(contactData.picture === null) ? DefaultProfile : {uri: contactData.picture}} style={s.picture} />
                         </TouchableOpacity>
-                        <Text style={s.name}>{"Amanda"}</Text>
-                        <Text style={s.phone}>{"08123456789"}</Text>
+                        <Text style={s.name}>{userData.contact.contactName}</Text>
+                        <Text style={s.phone}>{contactData.phone}</Text>
                         <Text style={s.lastSeen}>{contactData.lastSeen}</Text>
                     </View>
                     <TouchableOpacity activeOpacity={0.5}>
@@ -115,13 +167,13 @@ export default function Contact({route, navigation}) {
             </View>
             <Gap h={15} />
             <View style={s.contentBottom}>
-                <TouchableHighlight underlayColor='#454E55' onPress={() => {}}>
+                <TouchableHighlight underlayColor='#454E55' onPress={() => deleteContactPress()}>
                     <View style={s.bottomItem}>
                         <DeleteContact />
                         <Text style={s.bottomItemText}>Delete Contact</Text>
                     </View>
                 </TouchableHighlight>
-                <TouchableHighlight underlayColor='#454E55' onPress={() => {}}>
+                <TouchableHighlight underlayColor='#454E55' onPress={() => clearChatPress()}>
                     <View style={s.bottomItem}>
                         <DeleteChat />
                         <Text style={s.bottomItemText}>Clear Chat</Text>
