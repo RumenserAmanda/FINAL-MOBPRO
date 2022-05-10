@@ -8,5 +8,16 @@ import MyProfile from './MyProfile';
 import ChatItem from './ChatItem';
 import Contact from './Contact';
 import AddContact from './AddContact';
+import ProfilePicture from './ProfilePicture';
 
-export {Splash, Welcome, SignIn, Chats, MyProfile, ChatItem, Contact, AddContact};
+export {
+    Splash,
+    Welcome,
+    SignIn,
+    Chats,
+    MyProfile,
+    ChatItem,
+    Contact,
+    AddContact,
+    ProfilePicture,
+};
